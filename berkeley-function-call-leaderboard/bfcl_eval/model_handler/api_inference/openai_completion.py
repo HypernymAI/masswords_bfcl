@@ -49,8 +49,10 @@ class OpenAICompletionsHandler(BaseHandler):
         else:
             return default_decode_execute_prompting(result)
 
-    @retry_with_backoff(error_type=RateLimitError, error_message_pattern=None, max_wait=65)
     def generate_with_backoff(self, **kwargs):
+        # Add timeout to prevent infinite hangs
+        kwargs['timeout'] = 60  # 60 second timeout
+        
         # Strip 'azure/' prefix from model name if present
         if 'model' in kwargs and kwargs['model'].startswith('azure/'):
             kwargs['model'] = kwargs['model'].replace('azure/', '')

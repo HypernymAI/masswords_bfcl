@@ -471,13 +471,18 @@ def evaluate_task(
     return state
 
 
-def main(model, test_categories, result_dir, score_dir):
-    if result_dir is None:
+def main(model, test_categories, result_dir, score_dir, stochastic_result_dir=None, stochastic_score_dir=None):
+    # Handle stochastic directories (use exact paths)
+    if stochastic_result_dir is not None:
+        result_dir = Path(stochastic_result_dir)
+    elif result_dir is None:
         result_dir = RESULT_PATH
     else:
         result_dir = (PROJECT_ROOT / result_dir).resolve()
 
-    if score_dir is None:
+    if stochastic_score_dir is not None:
+        score_dir = Path(stochastic_score_dir)
+    elif score_dir is None:
         score_dir = SCORE_PATH
     else:
         score_dir = (PROJECT_ROOT / score_dir).resolve()

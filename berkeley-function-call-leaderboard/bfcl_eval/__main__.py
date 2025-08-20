@@ -19,6 +19,9 @@ from bfcl_eval.eval_checker.eval_runner import main as evaluation_main
 from dotenv import load_dotenv
 from tabulate import tabulate
 
+# Load environment variables from .env file
+load_dotenv()
+
 
 class ExecutionOrderGroup(typer.core.TyperGroup):
     def list_commands(self, ctx):
@@ -137,6 +140,11 @@ def generate(
         "--result-dir",
         help="Path to the folder where output files will be stored; Path should be relative to the `berkeley-function-call-leaderboard` root folder",
     ),
+    stochastic_result_dir: Optional[str] = typer.Option(
+        None,
+        "--stochastic-result-dir",
+        help="Use this exact directory for results (no PROJECT_ROOT prepending) - for stochastic testing",
+    ),
     allow_overwrite: bool = typer.Option(
         False,
         "--allow-overwrite",
@@ -147,6 +155,11 @@ def generate(
         False,
         "--run-ids",
         help="If true, also run the test entry mentioned in the test_case_ids_to_generate.json file, in addition to the --test_category argument.",
+    ),
+    prompt_file: Optional[str] = typer.Option(
+        None,
+        "--prompt-file",
+        help="Path to a custom prompt file to use instead of the default prompt.",
     ),
 ):
     """
@@ -166,8 +179,10 @@ def generate(
         skip_server_setup=skip_server_setup,
         local_model_path=local_model_path,
         result_dir=result_dir,
+        stochastic_result_dir=stochastic_result_dir,
         allow_overwrite=allow_overwrite,
         run_ids=run_ids,
+        prompt_file=prompt_file,
     )
     load_dotenv(dotenv_path=DOTENV_PATH, verbose=True, override=True)  # Load the .env file
     generation_main(args)
@@ -251,13 +266,23 @@ def evaluate(
         "--score-dir",
         help="Relative path to the evaluation score folder, if different from the default; Path should be relative to the `berkeley-function-call-leaderboard` root folder",
     ),
+    stochastic_result_dir: Optional[str] = typer.Option(
+        None,
+        "--stochastic-result-dir",
+        help="Use this exact directory for results (no PROJECT_ROOT prepending) - for stochastic testing",
+    ),
+    stochastic_score_dir: Optional[str] = typer.Option(
+        None,
+        "--stochastic-score-dir",
+        help="Use this exact directory for scores (no PROJECT_ROOT prepending) - for stochastic testing",
+    ),
 ):
     """
     Evaluate results from run of one or more models on a test-category (same as eval_runner.py).
     """
 
     load_dotenv(dotenv_path=DOTENV_PATH, verbose=True, override=True)  # Load the .env file
-    evaluation_main(model, test_category, result_dir, score_dir)
+    evaluation_main(model, test_category, result_dir, score_dir, stochastic_result_dir, stochastic_score_dir)
 
 
 @cli.command()

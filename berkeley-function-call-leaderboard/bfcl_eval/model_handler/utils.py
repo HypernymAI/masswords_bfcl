@@ -41,12 +41,7 @@ def load_custom_prompt_from_file(prompt_file_path):
     global _CUSTOM_SYSTEM_PROMPT_TEMPLATE
     if prompt_file_path:
         with open(prompt_file_path, 'r') as f:
-            content = f.read()
-            # Remove trailing {functions} if present - it will be added by the template
-            lines = content.strip().split('\n')
-            if lines and lines[-1].strip() == "{functions}":
-                content = '\n'.join(lines[:-1])
-            _CUSTOM_SYSTEM_PROMPT_TEMPLATE = content.strip()
+            _CUSTOM_SYSTEM_PROMPT_TEMPLATE = f.read().strip()
     else:
         _CUSTOM_SYSTEM_PROMPT_TEMPLATE = None
 
@@ -55,7 +50,11 @@ def get_system_prompt_template():
     if _CUSTOM_SYSTEM_PROMPT_TEMPLATE is not None:
         # Add the functions placeholder if not already present
         if "{functions}" not in _CUSTOM_SYSTEM_PROMPT_TEMPLATE:
-            return _CUSTOM_SYSTEM_PROMPT_TEMPLATE + "\n\nHere is a list of functions in JSON format that you can invoke.\n{functions}\n"
+            # Check if the prompt already ends with the functions line
+            if not _CUSTOM_SYSTEM_PROMPT_TEMPLATE.rstrip().endswith("Here is a list of functions in JSON format that you can invoke."):
+                return _CUSTOM_SYSTEM_PROMPT_TEMPLATE + "\n\nHere is a list of functions in JSON format that you can invoke.\n{functions}\n"
+            else:
+                return _CUSTOM_SYSTEM_PROMPT_TEMPLATE + "\n{functions}\n"
         return _CUSTOM_SYSTEM_PROMPT_TEMPLATE
     return DEFAULT_SYSTEM_PROMPT
 
