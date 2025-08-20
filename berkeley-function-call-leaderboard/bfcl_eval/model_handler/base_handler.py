@@ -604,6 +604,11 @@ class BaseHandler:
                     "content": inference_data.get("inference_input_log", ""),
                 }
             ]
+        
+        # Always log ALL messages for traceability
+        if "message" in inference_data:
+            metadata["full_prompt_messages"] = inference_data["message"]  # ALL messages sent to LLM
+                
         metadata["input_token_count"] = model_response_data["input_token"]
         metadata["output_token_count"] = model_response_data["output_token"]
         metadata["latency"] = query_latency
@@ -639,6 +644,11 @@ class BaseHandler:
                     "content": inference_data.get("inference_input_log", ""),
                 }
             ]
+        
+        # Always log ALL messages for traceability
+        if "message" in inference_data:
+            metadata["full_prompt_messages"] = inference_data["message"]  # ALL messages sent to LLM
+                
         metadata["input_token_count"] = model_response_data["input_token"]
         metadata["output_token_count"] = model_response_data["output_token"]
         metadata["latency"] = query_latency
