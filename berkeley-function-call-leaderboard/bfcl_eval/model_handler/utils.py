@@ -4,8 +4,22 @@ import copy
 import json
 import operator
 import re
+import threading
 from functools import reduce
 from typing import Callable, List, Optional, Type, Union
+
+# Global rate limit counter with thread-safe access
+_global_rate_limit_counter = 0
+_rate_limit_lock = threading.Lock()
+
+def get_rate_limit_count():
+    with _rate_limit_lock:
+        return _global_rate_limit_counter
+
+def reset_rate_limit_count():
+    global _global_rate_limit_counter
+    with _rate_limit_lock:
+        _global_rate_limit_counter = 0
 
 from bfcl_eval.constants.default_prompts import DEFAULT_SYSTEM_PROMPT
 from bfcl_eval.constants.type_mappings import GORILLA_TO_OPENAPI
@@ -18,6 +32,32 @@ from tenacity import (
     retry_if_exception_type,
     wait_random_exponential,
 )
+
+# Global variable to store custom prompt if provided
+_CUSTOM_SYSTEM_PROMPT_TEMPLATE = None
+
+def load_custom_prompt_from_file(prompt_file_path):
+    """Load a custom system prompt from a file path"""
+    global _CUSTOM_SYSTEM_PROMPT_TEMPLATE
+    if prompt_file_path:
+        with open(prompt_file_path, 'r') as f:
+            content = f.read()
+            # Remove trailing {functions} if present - it will be added by the template
+            lines = content.strip().split('\n')
+            if lines and lines[-1].strip() == "{functions}":
+                content = '\n'.join(lines[:-1])
+            _CUSTOM_SYSTEM_PROMPT_TEMPLATE = content.strip()
+    else:
+        _CUSTOM_SYSTEM_PROMPT_TEMPLATE = None
+
+def get_system_prompt_template():
+    """Get the system prompt template to use - either custom or default"""
+    if _CUSTOM_SYSTEM_PROMPT_TEMPLATE is not None:
+        # Add the functions placeholder if not already present
+        if "{functions}" not in _CUSTOM_SYSTEM_PROMPT_TEMPLATE:
+            return _CUSTOM_SYSTEM_PROMPT_TEMPLATE + "\n\nHere is a list of functions in JSON format that you can invoke.\n{functions}\n"
+        return _CUSTOM_SYSTEM_PROMPT_TEMPLATE
+    return DEFAULT_SYSTEM_PROMPT
 
 
 def _cast_to_openai_type(properties, mapping):
@@ -330,7 +370,7 @@ def system_prompt_pre_processing_chat_model(prompts, function_docs, test_categor
     """
     assert type(prompts) == list
 
-    system_prompt_template = DEFAULT_SYSTEM_PROMPT
+    system_prompt_template = get_system_prompt_template()
 
     system_prompt = system_prompt_template.format(functions=function_docs)
 
@@ -803,14 +843,30 @@ def retry_with_backoff(
         # Combine all conditions using logical OR
         retry_policy = reduce(operator.or_, conditions)
 
+        # Create a rate limit counter
+        rate_limit_counter = {"count": 0}
+        
+        def before_sleep_handler(retry_state):
+            error = str(retry_state.outcome.exception())
+            if "429" in error or "rate limit" in error.lower() or "负载已饱和" in error:
+                rate_limit_counter["count"] += 1
+                # Update global counter immediately
+                global _global_rate_limit_counter
+                with _rate_limit_lock:
+                    _global_rate_limit_counter += 1
+                # Don't print rate limit errors
+            else:
+                # Print other errors
+                print(
+                    f"Attempt {retry_state.attempt_number} failed. "
+                    f"Sleeping for {retry_state.next_action.sleep:.2f} seconds before retrying... "
+                    f"Error: {retry_state.outcome.exception()}"
+                )
+        
         @retry(
             wait=wait_random_exponential(min=min_wait, max=max_wait),
             retry=retry_policy,
-            before_sleep=lambda retry_state: print(
-                f"Attempt {retry_state.attempt_number} failed. "
-                f"Sleeping for {retry_state.next_action.sleep:.2f} seconds before retrying... "
-                f"Error: {retry_state.outcome.exception()}"
-            ),
+            before_sleep=before_sleep_handler,
             **kwargs,
         )
         def wrapped(*args, **inner_kwargs):

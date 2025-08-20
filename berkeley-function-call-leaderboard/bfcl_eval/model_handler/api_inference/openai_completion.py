@@ -23,7 +23,14 @@ class OpenAICompletionsHandler(BaseHandler):
     def __init__(self, model_name, temperature) -> None:
         super().__init__(model_name, temperature)
         self.model_style = ModelStyle.OpenAI_Completions
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        # Create client config
+        client_config = {"api_key": os.getenv("OPENAI_API_KEY")}
+        
+        # Only add base_url if it exists
+        if os.getenv("OPENAI_API_BASE"):
+            client_config["base_url"] = os.getenv("OPENAI_API_BASE")
+            
+        self.client = OpenAI(**client_config)
 
     def decode_ast(self, result, language="Python"):
         if "FC" in self.model_name or self.is_fc_model:
@@ -42,10 +49,36 @@ class OpenAICompletionsHandler(BaseHandler):
         else:
             return default_decode_execute_prompting(result)
 
-    @retry_with_backoff(error_type=RateLimitError)
+    @retry_with_backoff(error_type=RateLimitError, error_message_pattern=None, max_wait=65)
     def generate_with_backoff(self, **kwargs):
+        # Strip 'azure/' prefix from model name if present
+        if 'model' in kwargs and kwargs['model'].startswith('azure/'):
+            kwargs['model'] = kwargs['model'].replace('azure/', '')
+        
+        # Strip yellie suffixes from model name if present (for A/B testing)
+        yellie_suffixes = ['-yellies', '-anti-verbosity', '-format-strict', 
+                          '-param-precision', '-multi-tool', '-zero-output']
+        if 'model' in kwargs:
+            for suffix in yellie_suffixes:
+                if kwargs['model'].endswith(suffix):
+                    kwargs['model'] = kwargs['model'].replace(suffix, '')
+                    break
+        
+        # Log the actual temperature being used
+        # if 'temperature' in kwargs:
+        #     print(f"API call with temperature={kwargs['temperature']}")
+            
         start_time = time.time()
-        api_response = self.client.chat.completions.create(**kwargs)
+        try:
+            api_response = self.client.chat.completions.create(**kwargs)
+        except Exception as e:
+            # Check if this is a content filter error before allowing retry
+            error_msg = str(e)
+            if 'content_filter' in error_msg or 'content management policy' in error_msg:
+                # Don't retry content filter errors - raise a custom exception that won't be retried
+                raise ValueError(f"Content filter error (no retry): {error_msg}")
+            # Let other errors (including RateLimitError) be handled by retry_with_backoff
+            raise
         end_time = time.time()
 
         return api_response, end_time - start_time
@@ -61,6 +94,7 @@ class OpenAICompletionsHandler(BaseHandler):
             "messages": message,
             "model": self.model_name.replace("-FC", ""),
             "temperature": self.temperature,
+            "max_tokens": 4096,
             "store": False,
         }
 
@@ -194,12 +228,17 @@ class OpenAICompletionsHandler(BaseHandler):
     #### Prompting methods ####
 
     def _query_prompting(self, inference_data: dict):
-        inference_data["inference_input_log"] = {"message": repr(inference_data["message"])}
+        inference_data["inference_input_log"] = {
+            "message": repr(inference_data["message"]),
+            "temperature": self.temperature,
+            "max_tokens": 4096
+        }
 
         return self.generate_with_backoff(
             messages=inference_data["message"],
             model=self.model_name,
             temperature=self.temperature,
+            max_tokens=4096,
             store=False,
         )
 

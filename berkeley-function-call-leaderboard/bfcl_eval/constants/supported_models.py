@@ -166,5 +166,12 @@ SUPPORTED_MODELS = [
     "katanemo/Arch-Agent-1.5B",
     "katanemo/Arch-Agent-3B",
     "katanemo/Arch-Agent-7B",
-    "katanemo/Arch-Agent-32B"
+    "katanemo/Arch-Agent-32B",
+    "azure/Meta-Llama-31-8B-Instruct-2",
+    "azure/Meta-Llama-31-8B-Instruct-2-yellies",
+    "azure/Meta-Llama-31-8B-Instruct-2-anti-verbosity",
+    "azure/Meta-Llama-31-8B-Instruct-2-format-strict",
+    "azure/Meta-Llama-31-8B-Instruct-2-param-precision",
+    "azure/Meta-Llama-31-8B-Instruct-2-multi-tool",
+    "azure/Meta-Llama-31-8B-Instruct-2-zero-output"
 ]
