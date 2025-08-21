@@ -19,7 +19,7 @@ import numpy as np
 # Base configuration
 BASE_MODEL = "azure/Meta-Llama-31-8B-Instruct-2"
 RESULTS_DIR = Path("fan_stochastic_results")
-PROMPTS_BASE_DIR = Path("/Users/fieldempress/Desktop/source/hypernym/llama-prompt-ops/bfcl_optimization/yellies_experiment/prompts")
+PROMPTS_BASE_DIR = Path("jupiter_bfcl/yellies_prompts")
 NUM_THREADS = 1  # Default, can be overridden by command line
 NUM_RUNS = 50  # Number of runs per configuration
 BLACKLIST_DB = Path("content_filter_blacklist.db")
@@ -46,7 +46,7 @@ PROMPT_CONFIGS = {
     },
     "kitchen_sink": {
         "suffix": "-yellies",  # Already tested as category-adaptive
-        "prompt_file": "/Users/fieldempress/Desktop/source/hypernym/llama-prompt-ops/bfcl_optimization/yellies_experiment/bfcl_category_adaptive_yellied_prompt.txt",
+        "prompt_file": "jupiter_bfcl/yellies_prompts/bfcl_category_adaptive_yellied_prompt.txt",
         "description": "Category-adaptive yellies (kitchen sink)",
         "target_categories": ["simple", "irrelevance", "live_irrelevance", "live_simple", "live_relevance"],
         "expected_improvement": "Failed catastrophically"

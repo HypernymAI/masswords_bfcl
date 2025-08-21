@@ -19,7 +19,7 @@ import numpy as np
 # Base configuration
 BASE_MODEL = "azure/Meta-Llama-31-8B-Instruct-2"
 RESULTS_DIR = Path("fan_stochastic_results")
-PROMPTS_BASE_DIR = Path("/Users/fieldempress/Desktop/source/hypernym/llama-prompt-ops/bfcl_optimization/yellies_experiment/prompts")
+PROMPTS_BASE_DIR = Path("jupiter_bfcl/yellies_prompts")
 NUM_THREADS = 1  # Default, can be overridden by command line
 NUM_RUNS = 50  # Number of runs per configuration
 BLACKLIST_DB = Path("content_filter_blacklist.db")
