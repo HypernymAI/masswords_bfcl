@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 
 # Base configuration
-BASE_MODEL = "azure/Meta-Llama-31-8B-Instruct-2"
+BASE_MODEL = "azure/Llama-4-Maverick-17B-128E-Instruct-FP8"
 RESULTS_DIR = Path("fan_stochastic_results")
 PROMPTS_BASE_DIR = Path("jupiter_bfcl/yellies_prompts")
 NUM_THREADS = 1  # Default, can be overridden by command line
@@ -236,9 +236,11 @@ def run_bfcl_test(config_name, run_num, categories_override=None):
     
     # No symlinks - just use the directories directly
     
-    # Validate prompt file BEFORE changing directories
+    # Validate prompt file BEFORE changing directories and convert to absolute path
     prompt_file_path = config.get("prompt_file")
     if prompt_file_path:
+        # Convert to absolute path while we're still in the original directory
+        prompt_file_path = Path(prompt_file_path).absolute()
         print(f"Using prompt from: {prompt_file_path}")
         if not validate_prompt_file(prompt_file_path):
             return False
@@ -270,7 +272,7 @@ def run_bfcl_test(config_name, run_num, categories_override=None):
             
             # Add prompt file if specified
             if prompt_file_path:
-                cmd.extend(["--prompt-file", str(Path(prompt_file_path).absolute())])
+                cmd.extend(["--prompt-file", str(prompt_file_path)])
             
             subprocess.run(cmd, check=True)
             print("✓ Response generation complete")
