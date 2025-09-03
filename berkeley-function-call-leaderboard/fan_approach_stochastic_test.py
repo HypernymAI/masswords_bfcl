@@ -236,6 +236,13 @@ def run_bfcl_test(config_name, run_num, categories_override=None):
     
     # No symlinks - just use the directories directly
     
+    # Validate prompt file BEFORE changing directories
+    prompt_file_path = config.get("prompt_file")
+    if prompt_file_path:
+        print(f"Using prompt from: {prompt_file_path}")
+        if not validate_prompt_file(prompt_file_path):
+            return False
+    
     # Save current directory to restore later
     original_cwd = os.getcwd()
     
@@ -243,13 +250,6 @@ def run_bfcl_test(config_name, run_num, categories_override=None):
         # Change to run directory so BFCL writes to the correct location
         os.chdir(str(run_dir.absolute()))
         print(f"Changed to directory: {os.getcwd()}")
-        
-        # Validate prompt file if specified
-        prompt_file_path = config.get("prompt_file")
-        if prompt_file_path:
-            print(f"Using prompt from: {prompt_file_path}")
-            if not validate_prompt_file(prompt_file_path):
-                return False
         
         # Skip generation if we already have complete results
         if has_results and has_results_json:
