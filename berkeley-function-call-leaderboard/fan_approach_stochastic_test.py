@@ -16,8 +16,28 @@ from datetime import datetime
 from pathlib import Path
 import numpy as np
 
+# Check if bfcl_eval module is available
+try:
+    import bfcl_eval
+except ImportError:
+    print("\n" + "="*60)
+    print("ERROR: Cannot import bfcl_eval module!")
+    print("="*60)
+    print("\nThis usually means the conda environment is not activated.")
+    print("\nPlease run:")
+    print("  conda activate BFCL")
+    print("\nThen try again.")
+    print("="*60 + "\n")
+    sys.exit(1)
+
 # Base configuration
-BASE_MODEL = "azure/Llama-4-Maverick-17B-128E-Instruct-FP8"
+# Available Azure models:
+# BASE_MODEL = "azure/Llama-4-Scout-17B-16E-Instruct"
+# BASE_MODEL = "azure/Llama-4-Maverick-17B-128E-Instruct-FP8"
+# BASE_MODEL = "azure/Llama-33-70B-Instruct-2"
+# BASE_MODEL = "azure/Meta-Llama-31-405B-Instruct"
+# BASE_MODEL = "azure/Meta-Llama-31-8B-Instruct-2"
+BASE_MODEL = "azure/Meta-Llama-31-405B-Instruct"
 RESULTS_DIR = Path("fan_stochastic_results")
 PROMPTS_BASE_DIR = Path("jupiter_bfcl/yellies_prompts")
 NUM_THREADS = 1  # Default, can be overridden by command line
@@ -274,8 +294,23 @@ def run_bfcl_test(config_name, run_num, categories_override=None):
             if prompt_file_path:
                 cmd.extend(["--prompt-file", str(prompt_file_path)])
             
-            subprocess.run(cmd, check=True)
-            print("✓ Response generation complete")
+            try:
+                subprocess.run(cmd, check=True)
+                print("✓ Response generation complete")
+            except subprocess.CalledProcessError as e:
+                # Check if it's likely a module import error
+                if e.returncode == 1:
+                    print("\n" + "="*60)
+                    print("ERROR: Failed to run bfcl_eval generate!")
+                    print("="*60)
+                    print("\nIf you see 'No module named bfcl_eval', the conda environment is not activated.")
+                    print("\nPlease run:")
+                    print("  conda activate BFCL")
+                    print("\nThen try again.")
+                    print("="*60 + "\n")
+                    sys.exit(1)
+                else:
+                    raise
         
         # Evaluate results
         print(f"\n[2/2] Evaluating results...")
@@ -287,8 +322,23 @@ def run_bfcl_test(config_name, run_num, categories_override=None):
             "--stochastic-score-dir", "./score"     # Use exact path in current directory
         ]
         
-        subprocess.run(cmd, check=True)
-        print("✓ Evaluation complete")
+        try:
+            subprocess.run(cmd, check=True)
+            print("✓ Evaluation complete")
+        except subprocess.CalledProcessError as e:
+            # Check if it's likely a module import error
+            if e.returncode == 1:
+                print("\n" + "="*60)
+                print("ERROR: Failed to run bfcl_eval evaluate!")
+                print("="*60)
+                print("\nIf you see 'No module named bfcl_eval', the conda environment is not activated.")
+                print("\nPlease run:")
+                print("  conda activate BFCL")
+                print("\nThen try again.")
+                print("="*60 + "\n")
+                sys.exit(1)
+            else:
+                raise
         
         return True
         

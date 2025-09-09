@@ -1,0 +1,59 @@
+================================================================================
+FINAL FAN APPROACH COMPARISON (WITH STOCHASTIC RESULTS)
+================================================================================
+
+ANTI_VERBOSITY vs BASELINE:
+Description: Anti-verbosity only for [] output
+Target categories: ['live_irrelevance']
+Actual categories tested: ['simple', 'irrelevance', 'live_irrelevance', 'live_simple', 'live_relevance']
+------------------------------------------------------------
+   simple: 94.0% → 93.7% (-0.3%) 
+   irrelevance: 54.0% → 70.5% (+16.5%) ***
+🎯 live_irrelevance: 29.8% → 53.8% (+24.0%) ***
+   live_simple: 79.9% → 79.5% (-0.4%) 
+   live_relevance: 94.6% → 94.4% (-0.1%) 
+
+FORMAT_STRICT vs BASELINE:
+Description: Format compliance only
+Target categories: ['live_simple']
+Actual categories tested: ['simple', 'irrelevance', 'live_irrelevance', 'live_simple', 'live_relevance']
+------------------------------------------------------------
+   simple: 94.0% → 94.3% (+0.3%) 
+   irrelevance: 54.0% → 51.8% (-2.2%) 
+   live_irrelevance: 29.8% → 30.1% (+0.2%) 
+🎯 live_simple: 79.9% → 80.4% (+0.5%) 
+   live_relevance: 94.6% → 94.7% (+0.1%) 
+
+PARAM_PRECISION vs BASELINE:
+Description: Parameter type precision only
+Target categories: ['simple']
+Actual categories tested: ['simple', 'irrelevance', 'live_irrelevance', 'live_simple', 'live_relevance']
+------------------------------------------------------------
+🎯 simple: 94.0% → 95.2% (+1.2%) ***
+   irrelevance: 54.0% → 53.5% (-0.5%) 
+   live_irrelevance: 29.8% → 29.7% (-0.2%) 
+   live_simple: 79.9% → 81.0% (+1.0%) 
+   live_relevance: 94.6% → 99.8% (+5.2%) ***
+
+ZERO_OUTPUT vs BASELINE:
+Description: Zero output enforcement only
+Target categories: ['irrelevance', 'live_irrelevance']
+Actual categories tested: ['simple', 'irrelevance', 'live_irrelevance', 'live_simple', 'live_relevance']
+------------------------------------------------------------
+   simple: 94.0% → 94.6% (+0.6%) 
+🎯 irrelevance: 54.0% → 70.8% (+16.8%) ***
+🎯 live_irrelevance: 29.8% → 57.5% (+27.7%) ***
+   live_simple: 79.9% → 80.0% (+0.1%) 
+   live_relevance: 94.6% → 94.4% (-0.1%) 
+
+✓ Final report saved to fan_stochastic_results/fan_stochastic_final_report_20250905_131957.json
+
+============================================================
+SUMMARY OF SIGNIFICANT IMPROVEMENTS
+============================================================
+✓ anti_verbosity significantly improves irrelevance: 54.0% → 70.5% (+16.5%)
+✓ anti_verbosity significantly improves live_irrelevance: 29.8% → 53.8% (+24.0%)
+✓ param_precision significantly improves simple: 94.0% → 95.2% (+1.2%)
+✓ param_precision significantly improves live_relevance: 94.6% → 99.8% (+5.2%)
+✓ zero_output significantly improves irrelevance: 54.0% → 70.8% (+16.8%)
+✓ zero_output significantly improves live_irrelevance: 29.8% → 57.5% (+27.7%)
